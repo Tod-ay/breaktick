@@ -10,6 +10,7 @@ public sealed class AppSettings
     public bool WorkHoursEnabled { get; set; }
     public string WorkStart { get; set; } = "09:00";
     public string WorkEnd { get; set; } = "18:00";
+    public bool LaunchAtLogin { get; set; }
     public int CompletedToday { get; set; }
     public DateOnly CompletionDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 }

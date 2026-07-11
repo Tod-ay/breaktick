@@ -10,6 +10,7 @@ public partial class App : System.Windows.Application
     private BreakOverlay? _overlay;
     private GlobalHotkeyService? _hotkey;
     private SessionMonitor? _sessionMonitor;
+    private AutoStartService? _autoStart;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -22,6 +23,9 @@ public partial class App : System.Windows.Application
         _overlay = new BreakOverlay(_coordinator);
         _tray = new TrayService(_coordinator, ShowDashboard, Shutdown);
         _hotkey = new GlobalHotkeyService(_coordinator.TogglePause);
+        _autoStart = new AutoStartService();
+        _autoStart.Apply(_coordinator.Settings.LaunchAtLogin);
+        _coordinator.SettingsChanged += (_, _) => _autoStart.Apply(_coordinator.Settings.LaunchAtLogin);
         _sessionMonitor = new SessionMonitor();
         _sessionMonitor.UnlockedAfterLock += (_, _) => Dispatcher.BeginInvoke(_coordinator.HandleSessionUnlock);
 

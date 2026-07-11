@@ -51,6 +51,7 @@ public sealed class BreakCoordinator : IDisposable
     public event EventHandler? WorkStarted;
     public event EventHandler? BreakStarted;
     public event EventHandler? ReturnRequested;
+    public event EventHandler? SettingsChanged;
 
     public void Start()
     {
@@ -129,7 +130,7 @@ public sealed class BreakCoordinator : IDisposable
         StartWork();
     }
 
-    public bool UpdateSettings(int workMinutes, int breakSeconds, int dailyGoal, BreakPosition breakPosition, bool resetOnSessionUnlock, bool workHoursEnabled, string workStart, string workEnd)
+    public bool UpdateSettings(int workMinutes, int breakSeconds, int dailyGoal, BreakPosition breakPosition, bool resetOnSessionUnlock, bool workHoursEnabled, string workStart, string workEnd, bool launchAtLogin)
     {
         if (workMinutes is < 1 or > 120 || breakSeconds is < 20 or > 900 || dailyGoal is < 1 or > 20)
         {
@@ -144,7 +145,9 @@ public sealed class BreakCoordinator : IDisposable
         Settings.WorkHoursEnabled = workHoursEnabled;
         Settings.WorkStart = workStart;
         Settings.WorkEnd = workEnd;
+        Settings.LaunchAtLogin = launchAtLogin;
         _settingsStore.Save(Settings);
+        SettingsChanged?.Invoke(this, EventArgs.Empty);
 
         if (Phase is TimerPhase.Working or TimerPhase.Paused)
         {
