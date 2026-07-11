@@ -1,12 +1,13 @@
 <Window x:Class="BreakTick.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="BreakTick" Height="540" Width="420" WindowStartupLocation="CenterScreen"
+        Title="BreakTick" Height="600" Width="420" WindowStartupLocation="CenterScreen"
         Background="{StaticResource SurfaceBrush}">
     <Grid Margin="32">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -42,7 +43,16 @@
                 <TextBox x:Name="DailyGoalBox" Margin="0,6,0,0" Padding="8,6" />
             </StackPanel>
         </Grid>
-        <StackPanel Grid.Row="3" HorizontalAlignment="Center">
+        <StackPanel Grid.Row="3" Margin="0,0,0,16">
+            <TextBlock Text="休息提示位置" Foreground="{StaticResource MutedBrush}" FontSize="12" />
+            <ComboBox x:Name="PositionBox" SelectedValuePath="Tag" Margin="0,6,0,0" Padding="8,6">
+                <ComboBoxItem Tag="TopRight">右上角卡片</ComboBoxItem>
+                <ComboBoxItem Tag="TopLeft">左上角卡片</ComboBoxItem>
+                <ComboBoxItem Tag="Center">屏幕中央</ComboBoxItem>
+                <ComboBoxItem Tag="FullScreen">全屏休息提示</ComboBoxItem>
+            </ComboBox>
+        </StackPanel>
+        <StackPanel Grid.Row="4" HorizontalAlignment="Center">
             <TextBlock x:Name="SettingsMessage" Foreground="#B76B23" TextAlignment="Center" Margin="0,0,0,8" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
             <Button x:Name="PauseButton" Click="Pause_Click" Background="{StaticResource AccentBrush}" Foreground="White" BorderThickness="0" />

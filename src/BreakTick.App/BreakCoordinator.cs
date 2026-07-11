@@ -119,7 +119,7 @@ public sealed class BreakCoordinator : IDisposable
         StartWork();
     }
 
-    public bool UpdateSettings(int workMinutes, int breakSeconds, int dailyGoal)
+    public bool UpdateSettings(int workMinutes, int breakSeconds, int dailyGoal, BreakPosition breakPosition)
     {
         if (workMinutes is < 1 or > 120 || breakSeconds is < 20 or > 900 || dailyGoal is < 1 or > 20)
         {
@@ -129,6 +129,7 @@ public sealed class BreakCoordinator : IDisposable
         Settings.WorkMinutes = workMinutes;
         Settings.BreakSeconds = breakSeconds;
         Settings.DailyGoal = dailyGoal;
+        Settings.BreakPosition = breakPosition;
         _settingsStore.Save(Settings);
 
         if (Phase is TimerPhase.Working or TimerPhase.Paused)

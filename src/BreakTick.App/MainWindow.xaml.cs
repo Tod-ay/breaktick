@@ -17,6 +17,7 @@ public partial class MainWindow : Window
         WorkMinutesBox.Text = _coordinator.Settings.WorkMinutes.ToString();
         BreakSecondsBox.Text = _coordinator.Settings.BreakSeconds.ToString();
         DailyGoalBox.Text = _coordinator.Settings.DailyGoal.ToString();
+        PositionBox.SelectedValue = _coordinator.Settings.BreakPosition.ToString();
         Refresh();
     }
 
@@ -35,7 +36,8 @@ public partial class MainWindow : Window
         if (!int.TryParse(WorkMinutesBox.Text, out var workMinutes)
             || !int.TryParse(BreakSecondsBox.Text, out var breakSeconds)
             || !int.TryParse(DailyGoalBox.Text, out var dailyGoal)
-            || !_coordinator.UpdateSettings(workMinutes, breakSeconds, dailyGoal))
+            || !Enum.TryParse<BreakPosition>(PositionBox.SelectedValue?.ToString(), out var breakPosition)
+            || !_coordinator.UpdateSettings(workMinutes, breakSeconds, dailyGoal, breakPosition))
         {
             SettingsMessage.Text = "工作 1–120 分钟；休息 20–900 秒；目标 1–20 次。";
             return;

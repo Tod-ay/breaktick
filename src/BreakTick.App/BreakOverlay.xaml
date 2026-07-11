@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Width="340" Height="310" WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False"
         AllowsTransparency="True" Background="Transparent" Topmost="True">
-    <Border Background="#FDFEFD" BorderBrush="#DDE7E1" BorderThickness="1" CornerRadius="18" Padding="28">
+    <Border x:Name="OverlaySurface" Background="#FDFEFD" BorderBrush="#DDE7E1" BorderThickness="1" CornerRadius="18" Padding="28">
         <StackPanel VerticalAlignment="Center">
             <TextBlock Text="✦" FontSize="30" Foreground="{StaticResource AccentBrush}" TextAlignment="Center" />
             <TextBlock x:Name="TitleText" FontSize="21" FontWeight="SemiBold" TextAlignment="Center" Margin="0,14,0,0" />

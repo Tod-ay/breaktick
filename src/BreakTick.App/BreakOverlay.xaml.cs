@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Media;
+using WpfColor = System.Windows.Media.Color;
 
 namespace BreakTick.App;
 
@@ -11,13 +13,13 @@ public partial class BreakOverlay : Window
         InitializeComponent();
         _coordinator = coordinator;
         _coordinator.StateChanged += (_, _) => Refresh();
-        Loaded += (_, _) => PositionTopRight();
+        Loaded += (_, _) => ApplyPosition();
     }
 
     public void ShowForBreak()
     {
         Show();
-        PositionTopRight();
+        ApplyPosition();
         Activate();
         Refresh();
     }
@@ -25,7 +27,7 @@ public partial class BreakOverlay : Window
     public void ShowReturnPrompt()
     {
         Show();
-        PositionTopRight();
+        ApplyPosition();
         Refresh();
     }
 
@@ -53,10 +55,43 @@ public partial class BreakOverlay : Window
             : $"跳过休息 ({_coordinator.SkipClickCount}/3)";
     }
 
-    private void PositionTopRight()
+    private void ApplyPosition()
     {
         var workArea = SystemParameters.WorkArea;
-        Left = workArea.Right - Width - 24;
-        Top = workArea.Top + 24;
+        var position = _coordinator.Settings.BreakPosition;
+        var isFullScreen = position == BreakPosition.FullScreen;
+
+        OverlaySurface.Background = isFullScreen
+            ? new SolidColorBrush(WpfColor.FromArgb(235, 13, 20, 16))
+            : new SolidColorBrush(WpfColor.FromRgb(253, 254, 253));
+        OverlaySurface.BorderThickness = isFullScreen ? new Thickness(0) : new Thickness(1);
+        OverlaySurface.CornerRadius = isFullScreen ? new CornerRadius(0) : new CornerRadius(18);
+
+        if (isFullScreen)
+        {
+            Left = 0;
+            Top = 0;
+            Width = SystemParameters.PrimaryScreenWidth;
+            Height = SystemParameters.PrimaryScreenHeight;
+            return;
+        }
+
+        Width = 340;
+        Height = 310;
+        switch (position)
+        {
+            case BreakPosition.TopLeft:
+                Left = workArea.Left + 24;
+                Top = workArea.Top + 24;
+                break;
+            case BreakPosition.Center:
+                Left = workArea.Left + (workArea.Width - Width) / 2;
+                Top = workArea.Top + (workArea.Height - Height) / 2;
+                break;
+            default:
+                Left = workArea.Right - Width - 24;
+                Top = workArea.Top + 24;
+                break;
+        }
     }
 }
