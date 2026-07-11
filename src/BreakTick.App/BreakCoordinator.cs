@@ -16,6 +16,7 @@ public sealed class BreakCoordinator : IDisposable
     private TimerPhase _pausedPhase;
     private long? _sessionId;
     private DashboardStats _statistics;
+    private bool _schedulePaused;
 
     public BreakCoordinator(SettingsStore settingsStore, AppDatabase database, IIdleDetector? idleDetector = null)
     {
@@ -64,6 +65,11 @@ public sealed class BreakCoordinator : IDisposable
     {
         if (Phase == TimerPhase.Paused)
         {
+            if (_schedulePaused && !WorkSchedule.IsActive(Settings, DateTime.Now))
+            {
+                return;
+            }
+
             Phase = _pausedPhase;
             _deadline = DateTimeOffset.Now.Add(_pausedRemaining);
             _timer.Start();
@@ -123,7 +129,7 @@ public sealed class BreakCoordinator : IDisposable
         StartWork();
     }
 
-    public bool UpdateSettings(int workMinutes, int breakSeconds, int dailyGoal, BreakPosition breakPosition, bool resetOnSessionUnlock)
+    public bool UpdateSettings(int workMinutes, int breakSeconds, int dailyGoal, BreakPosition breakPosition, bool resetOnSessionUnlock, bool workHoursEnabled, string workStart, string workEnd)
     {
         if (workMinutes is < 1 or > 120 || breakSeconds is < 20 or > 900 || dailyGoal is < 1 or > 20)
         {
@@ -135,6 +141,9 @@ public sealed class BreakCoordinator : IDisposable
         Settings.DailyGoal = dailyGoal;
         Settings.BreakPosition = breakPosition;
         Settings.ResetOnSessionUnlock = resetOnSessionUnlock;
+        Settings.WorkHoursEnabled = workHoursEnabled;
+        Settings.WorkStart = workStart;
+        Settings.WorkEnd = workEnd;
         _settingsStore.Save(Settings);
 
         if (Phase is TimerPhase.Working or TimerPhase.Paused)
@@ -253,6 +262,31 @@ public sealed class BreakCoordinator : IDisposable
 
     private void Tick()
     {
+        if (Phase == TimerPhase.Paused && _schedulePaused)
+        {
+            if (WorkSchedule.IsActive(Settings, DateTime.Now))
+            {
+                _schedulePaused = false;
+                Phase = _pausedPhase;
+                _deadline = DateTimeOffset.Now.Add(_pausedRemaining);
+            }
+            else
+            {
+                OnStateChanged();
+                return;
+            }
+        }
+
+        if (Phase == TimerPhase.Working && !WorkSchedule.IsActive(Settings, DateTime.Now))
+        {
+            _pausedPhase = TimerPhase.Working;
+            _pausedRemaining = Remaining;
+            _schedulePaused = true;
+            Phase = TimerPhase.Paused;
+            OnStateChanged();
+            return;
+        }
+
         if (Phase == TimerPhase.Breaking)
         {
             TickBreak();

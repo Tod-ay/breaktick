@@ -1,7 +1,7 @@
 <Window x:Class="BreakTick.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="BreakTick" Height="600" Width="420" WindowStartupLocation="CenterScreen"
+        Title="BreakTick" Height="680" Width="420" WindowStartupLocation="CenterScreen"
         Background="{StaticResource SurfaceBrush}">
     <Grid Margin="32">
         <Grid.RowDefinitions>
@@ -55,6 +55,12 @@
             </ComboBox>
             <CheckBox x:Name="ResetOnUnlockCheck" Content="解锁后重新开始工作计时" Margin="0,12,0,0" />
             <TextBlock Text="快捷键 Ctrl + Alt + B：暂停或继续" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,8,0,0" />
+            <CheckBox x:Name="WorkHoursEnabledCheck" Content="只在工作时间提醒" Margin="0,12,0,0" />
+            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                <TextBox x:Name="WorkStartBox" Width="80" Padding="8,6" />
+                <TextBlock Text="至" VerticalAlignment="Center" Margin="8,0" Foreground="{StaticResource MutedBrush}" />
+                <TextBox x:Name="WorkEndBox" Width="80" Padding="8,6" />
+            </StackPanel>
         </StackPanel>
         <StackPanel Grid.Row="4" HorizontalAlignment="Center">
             <TextBlock x:Name="SettingsMessage" Foreground="#B76B23" TextAlignment="Center" Margin="0,0,0,8" />
