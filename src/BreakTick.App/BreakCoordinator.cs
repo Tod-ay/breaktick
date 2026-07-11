@@ -6,6 +6,7 @@ public sealed class BreakCoordinator : IDisposable
 {
     private readonly DispatcherTimer _timer;
     private readonly SettingsStore _settingsStore;
+    private readonly AppDatabase _database;
     private readonly IIdleDetector _idleDetector;
     private DateTimeOffset _deadline;
     private TimeSpan _pausedRemaining;
@@ -13,13 +14,15 @@ public sealed class BreakCoordinator : IDisposable
     private DateTimeOffset _breakStartedAt;
     private DateTimeOffset _skipGraceUntil;
     private TimerPhase _pausedPhase;
+    private long? _sessionId;
 
-    public BreakCoordinator(SettingsStore settingsStore, IIdleDetector? idleDetector = null)
+    public BreakCoordinator(SettingsStore settingsStore, AppDatabase database, IIdleDetector? idleDetector = null)
     {
         _settingsStore = settingsStore;
+        _database = database;
         _idleDetector = idleDetector ?? new Win32IdleDetector();
         Settings = settingsStore.Load();
-        ResetDailyCountIfNeeded();
+        RefreshTodayCount();
         _timer = new DispatcherTimer(DispatcherPriority.Normal)
         {
             Interval = TimeSpan.FromSeconds(1)
@@ -47,7 +50,7 @@ public sealed class BreakCoordinator : IDisposable
 
     public void Start()
     {
-        ResetDailyCountIfNeeded();
+        RefreshTodayCount();
         StartWork();
     }
 
@@ -70,25 +73,30 @@ public sealed class BreakCoordinator : IDisposable
         OnStateChanged();
     }
 
-    public void ResetWork()
-    {
-        StartWork();
-    }
+    public void ResetWork() => StartWork();
 
     public void RegisterSkipClick()
     {
-        if (Phase is TimerPhase.Breaking or TimerPhase.AwaitingReturn)
+        if (Phase is not (TimerPhase.Breaking or TimerPhase.AwaitingReturn))
         {
-            SkipClickCount++;
-            _skipGraceUntil = DateTimeOffset.Now.AddSeconds(3);
-            if (SkipClickCount >= 3)
-            {
-                StartWork();
-                return;
-            }
-
-            OnStateChanged();
+            return;
         }
+
+        SkipClickCount++;
+        _skipGraceUntil = DateTimeOffset.Now.AddSeconds(3);
+        if (SkipClickCount < 3)
+        {
+            OnStateChanged();
+            return;
+        }
+
+        if (_sessionId is long sessionId)
+        {
+            _database.MarkSkipped(sessionId);
+            _sessionId = null;
+        }
+
+        StartWork();
     }
 
     public void ConfirmReturn()
@@ -98,8 +106,12 @@ public sealed class BreakCoordinator : IDisposable
             return;
         }
 
-        ResetDailyCountIfNeeded();
-        Settings.CompletedToday++;
+        if (_sessionId is long sessionId)
+        {
+            Settings.CompletedToday = _database.CompleteBreak(sessionId);
+            _sessionId = null;
+        }
+
         _settingsStore.Save(Settings);
         StartWork();
     }
@@ -130,10 +142,16 @@ public sealed class BreakCoordinator : IDisposable
 
     private void StartWork()
     {
+        if (_sessionId is long existingSessionId)
+        {
+            _database.EndSession(existingSessionId);
+        }
+
         Phase = TimerPhase.Working;
         IsBreakPausedForActivity = false;
         SkipClickCount = 0;
         _deadline = DateTimeOffset.Now.AddMinutes(Settings.WorkMinutes);
+        _sessionId = _database.StartSession(Settings);
         _timer.Start();
         WorkStarted?.Invoke(this, EventArgs.Empty);
         OnStateChanged();
@@ -144,6 +162,11 @@ public sealed class BreakCoordinator : IDisposable
         Phase = TimerPhase.Breaking;
         _breakStartedAt = DateTimeOffset.Now;
         _breakRemaining = TimeSpan.FromSeconds(Settings.BreakSeconds);
+        if (_sessionId is long sessionId)
+        {
+            _database.MarkBreakStarted(sessionId);
+        }
+
         IsBreakPausedForActivity = false;
         SkipClickCount = 0;
         BreakStarted?.Invoke(this, EventArgs.Empty);
@@ -192,20 +215,21 @@ public sealed class BreakCoordinator : IDisposable
         OnStateChanged();
     }
 
-    private void ResetDailyCountIfNeeded()
+    private void RefreshTodayCount()
     {
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        if (Settings.CompletionDate == today)
-        {
-            return;
-        }
-
-        Settings.CompletionDate = today;
-        Settings.CompletedToday = 0;
+        Settings.CompletionDate = DateOnly.FromDateTime(DateTime.Today);
+        Settings.CompletedToday = _database.GetTodayCompletionCount();
         _settingsStore.Save(Settings);
     }
 
     private void OnStateChanged() => StateChanged?.Invoke(this, EventArgs.Empty);
 
-    public void Dispose() => _timer.Stop();
+    public void Dispose()
+    {
+        _timer.Stop();
+        if (_sessionId is long sessionId)
+        {
+            _database.EndSession(sessionId);
+        }
+    }
 }

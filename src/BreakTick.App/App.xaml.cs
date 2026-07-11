@@ -14,7 +14,8 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
 
         var settingsStore = new SettingsStore();
-        _coordinator = new BreakCoordinator(settingsStore);
+        var database = new AppDatabase();
+        _coordinator = new BreakCoordinator(settingsStore, database);
         _mainWindow = new MainWindow(_coordinator, settingsStore);
         _overlay = new BreakOverlay(_coordinator);
         _tray = new TrayService(_coordinator, ShowDashboard, Shutdown);
