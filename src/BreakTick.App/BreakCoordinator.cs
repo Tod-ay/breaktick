@@ -51,7 +51,10 @@ public sealed class BreakCoordinator : IDisposable
     public void Start()
     {
         RefreshTodayCount();
-        StartWork();
+        if (!TryRestoreTimer())
+        {
+            StartWork();
+        }
     }
 
     public void TogglePause()
@@ -140,6 +143,67 @@ public sealed class BreakCoordinator : IDisposable
         return true;
     }
 
+    private bool TryRestoreTimer()
+    {
+        var snapshot = _database.LoadTimerSnapshot();
+        if (snapshot?.SessionId is not long sessionId)
+        {
+            return false;
+        }
+
+        _sessionId = sessionId;
+        switch (snapshot.Phase)
+        {
+            case TimerPhase.Working when snapshot.Deadline is DateTimeOffset deadline:
+                _deadline = deadline;
+                if (_deadline <= DateTimeOffset.Now)
+                {
+                    StartBreak();
+                    return true;
+                }
+
+                Phase = TimerPhase.Working;
+                _timer.Start();
+                WorkStarted?.Invoke(this, EventArgs.Empty);
+                OnStateChanged();
+                return true;
+
+            case TimerPhase.Breaking:
+                _breakRemaining = snapshot.Remaining;
+                if (_breakRemaining <= TimeSpan.Zero)
+                {
+                    Phase = TimerPhase.AwaitingReturn;
+                    ReturnRequested?.Invoke(this, EventArgs.Empty);
+                    OnStateChanged();
+                    return true;
+                }
+
+                Phase = TimerPhase.Breaking;
+                _breakStartedAt = DateTimeOffset.Now;
+                _timer.Start();
+                BreakStarted?.Invoke(this, EventArgs.Empty);
+                OnStateChanged();
+                return true;
+
+            case TimerPhase.AwaitingReturn:
+                Phase = TimerPhase.AwaitingReturn;
+                ReturnRequested?.Invoke(this, EventArgs.Empty);
+                OnStateChanged();
+                return true;
+
+            case TimerPhase.Paused when snapshot.ResumePhase is TimerPhase resumePhase:
+                Phase = TimerPhase.Paused;
+                _pausedPhase = resumePhase;
+                _pausedRemaining = snapshot.Remaining;
+                OnStateChanged();
+                return true;
+
+            default:
+                _sessionId = null;
+                return false;
+        }
+    }
+
     private void StartWork()
     {
         if (_sessionId is long existingSessionId)
@@ -222,14 +286,20 @@ public sealed class BreakCoordinator : IDisposable
         _settingsStore.Save(Settings);
     }
 
-    private void OnStateChanged() => StateChanged?.Invoke(this, EventArgs.Empty);
+    private void OnStateChanged()
+    {
+        _database.SaveTimerSnapshot(new TimerSnapshot(
+            Phase,
+            Phase == TimerPhase.Paused ? _pausedPhase : null,
+            Phase == TimerPhase.Working ? _deadline : null,
+            Remaining,
+            _sessionId));
+        StateChanged?.Invoke(this, EventArgs.Empty);
+    }
 
     public void Dispose()
     {
         _timer.Stop();
-        if (_sessionId is long sessionId)
-        {
-            _database.EndSession(sessionId);
-        }
+        OnStateChanged();
     }
 }

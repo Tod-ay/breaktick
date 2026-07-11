@@ -82,6 +82,61 @@ public sealed class AppDatabase
         return Convert.ToInt32(command.ExecuteScalar());
     }
 
+    public void SaveTimerSnapshot(TimerSnapshot snapshot)
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO timer_state (id, phase, resume_phase, deadline, remaining_seconds, session_id, updated_at)
+            VALUES (1, $phase, $resumePhase, $deadline, $remainingSeconds, $sessionId, $updatedAt)
+            ON CONFLICT(id) DO UPDATE SET
+                phase = excluded.phase,
+                resume_phase = excluded.resume_phase,
+                deadline = excluded.deadline,
+                remaining_seconds = excluded.remaining_seconds,
+                session_id = excluded.session_id,
+                updated_at = excluded.updated_at;
+            """;
+        command.Parameters.AddWithValue("$phase", snapshot.Phase.ToString());
+        command.Parameters.AddWithValue("$resumePhase", snapshot.ResumePhase?.ToString() ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("$deadline", snapshot.Deadline?.ToString("O") ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("$remainingSeconds", snapshot.Remaining.TotalSeconds);
+        command.Parameters.AddWithValue("$sessionId", snapshot.SessionId ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.UtcNow.ToString("O"));
+        command.ExecuteNonQuery();
+    }
+
+    public TimerSnapshot? LoadTimerSnapshot()
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT phase, resume_phase, deadline, remaining_seconds, session_id FROM timer_state WHERE id = 1;";
+        using var reader = command.ExecuteReader();
+        if (!reader.Read() || !Enum.TryParse<TimerPhase>(reader.GetString(0), out var phase))
+        {
+            return null;
+        }
+
+        TimerPhase? resumePhase = null;
+        if (!reader.IsDBNull(1) && Enum.TryParse<TimerPhase>(reader.GetString(1), out var parsedResumePhase))
+        {
+            resumePhase = parsedResumePhase;
+        }
+
+        DateTimeOffset? deadline = null;
+        if (!reader.IsDBNull(2) && DateTimeOffset.TryParse(reader.GetString(2), out var parsedDeadline))
+        {
+            deadline = parsedDeadline;
+        }
+
+        return new TimerSnapshot(
+            phase,
+            resumePhase,
+            deadline,
+            TimeSpan.FromSeconds(reader.GetDouble(3)),
+            reader.IsDBNull(4) ? null : reader.GetInt64(4));
+    }
+
     private void Initialize()
     {
         using var connection = OpenConnection();
@@ -108,6 +163,15 @@ public sealed class AppDatabase
                 FOREIGN KEY(session_id) REFERENCES sessions(id)
             );
             CREATE INDEX IF NOT EXISTS idx_completions_date ON completions(date);
+            CREATE TABLE IF NOT EXISTS timer_state (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                phase TEXT NOT NULL,
+                resume_phase TEXT,
+                deadline TEXT,
+                remaining_seconds REAL NOT NULL,
+                session_id INTEGER,
+                updated_at TEXT NOT NULL
+            );
             """;
         command.ExecuteNonQuery();
     }
