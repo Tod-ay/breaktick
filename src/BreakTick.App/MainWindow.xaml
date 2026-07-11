@@ -58,6 +58,7 @@
             <TextBlock Text="快捷键 Ctrl + Alt + B：暂停或继续" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,8,0,0" />
             <CheckBox x:Name="WorkHoursEnabledCheck" Content="只在工作时间提醒" Margin="0,12,0,0" />
             <CheckBox x:Name="LaunchAtLoginCheck" Content="登录 Windows 时自动启动" Margin="0,8,0,0" />
+            <CheckBox x:Name="SoundEnabledCheck" Content="休息开始时播放提示音" Margin="0,8,0,0" />
             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                 <TextBox x:Name="WorkStartBox" Width="80" Padding="8,6" />
                 <TextBlock Text="至" VerticalAlignment="Center" Margin="8,0" Foreground="{StaticResource MutedBrush}" />

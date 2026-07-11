@@ -130,7 +130,7 @@ public sealed class BreakCoordinator : IDisposable
         StartWork();
     }
 
-    public bool UpdateSettings(int workMinutes, int breakSeconds, int dailyGoal, BreakPosition breakPosition, bool resetOnSessionUnlock, bool workHoursEnabled, string workStart, string workEnd, bool launchAtLogin)
+    public bool UpdateSettings(int workMinutes, int breakSeconds, int dailyGoal, BreakPosition breakPosition, bool resetOnSessionUnlock, bool workHoursEnabled, string workStart, string workEnd, bool launchAtLogin, bool soundEnabled)
     {
         if (workMinutes is < 1 or > 120 || breakSeconds is < 20 or > 900 || dailyGoal is < 1 or > 20)
         {
@@ -146,6 +146,7 @@ public sealed class BreakCoordinator : IDisposable
         Settings.WorkStart = workStart;
         Settings.WorkEnd = workEnd;
         Settings.LaunchAtLogin = launchAtLogin;
+        Settings.SoundEnabled = soundEnabled;
         _settingsStore.Save(Settings);
         SettingsChanged?.Invoke(this, EventArgs.Empty);
 
@@ -261,6 +262,10 @@ public sealed class BreakCoordinator : IDisposable
 
         IsBreakPausedForActivity = false;
         SkipClickCount = 0;
+        if (Settings.SoundEnabled)
+        {
+            System.Media.SystemSounds.Asterisk.Play();
+        }
         BreakStarted?.Invoke(this, EventArgs.Empty);
         OnStateChanged();
     }
