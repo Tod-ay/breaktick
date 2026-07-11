@@ -1,0 +1,10 @@
+namespace BreakTick.App;
+
+public sealed class AppSettings
+{
+    public int WorkMinutes { get; set; } = 60;
+    public int BreakSeconds { get; set; } = 120;
+    public int DailyGoal { get; set; } = 8;
+    public int CompletedToday { get; set; }
+    public DateOnly CompletionDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+}
