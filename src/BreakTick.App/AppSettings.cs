@@ -16,6 +16,7 @@ public sealed class AppSettings
     public bool LongBreakEnabled { get; set; }
     public int LongBreakInterval { get; set; } = 4;
     public int LongBreakSeconds { get; set; } = 900;
+    public bool AutoPauseOnGoal { get; set; }
     public int CompletedToday { get; set; }
     public DateOnly CompletionDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 }

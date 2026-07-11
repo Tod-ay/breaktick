@@ -61,6 +61,7 @@
             <CheckBox x:Name="SoundEnabledCheck" Content="休息开始时播放提示音" Margin="0,8,0,0" />
             <CheckBox x:Name="FullScreenAllDisplaysCheck" Content="全屏休息时覆盖所有显示器" Margin="0,8,0,0" />
             <CheckBox x:Name="LongBreakEnabledCheck" Content="启用长休息（每 4 次休息后 15 分钟）" Margin="0,8,0,0" />
+            <CheckBox x:Name="AutoPauseOnGoalCheck" Content="达到每日目标后自动暂停" Margin="0,8,0,0" />
             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                 <TextBox x:Name="WorkStartBox" Width="80" Padding="8,6" />
                 <TextBlock Text="至" VerticalAlignment="Center" Margin="8,0" Foreground="{StaticResource MutedBrush}" />

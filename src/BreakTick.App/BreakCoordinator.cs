@@ -128,10 +128,19 @@ public sealed class BreakCoordinator : IDisposable
         }
 
         _settingsStore.Save(Settings);
+        if (Settings.AutoPauseOnGoal && Settings.CompletedToday >= Settings.DailyGoal)
+        {
+            Phase = TimerPhase.Paused;
+            _pausedPhase = TimerPhase.Working;
+            _pausedRemaining = TimeSpan.Zero;
+            OnStateChanged();
+            return;
+        }
+
         StartWork();
     }
 
-    public bool UpdateSettings(int workMinutes, int breakSeconds, int dailyGoal, BreakPosition breakPosition, bool resetOnSessionUnlock, bool workHoursEnabled, string workStart, string workEnd, bool launchAtLogin, bool soundEnabled, bool fullScreenAllDisplays, bool longBreakEnabled)
+    public bool UpdateSettings(int workMinutes, int breakSeconds, int dailyGoal, BreakPosition breakPosition, bool resetOnSessionUnlock, bool workHoursEnabled, string workStart, string workEnd, bool launchAtLogin, bool soundEnabled, bool fullScreenAllDisplays, bool longBreakEnabled, bool autoPauseOnGoal)
     {
         if (workMinutes is < 1 or > 120 || breakSeconds is < 20 or > 900 || dailyGoal is < 1 or > 20)
         {
@@ -150,6 +159,7 @@ public sealed class BreakCoordinator : IDisposable
         Settings.SoundEnabled = soundEnabled;
         Settings.FullScreenAllDisplays = fullScreenAllDisplays;
         Settings.LongBreakEnabled = longBreakEnabled;
+        Settings.AutoPauseOnGoal = autoPauseOnGoal;
         _settingsStore.Save(Settings);
         SettingsChanged?.Invoke(this, EventArgs.Empty);
 

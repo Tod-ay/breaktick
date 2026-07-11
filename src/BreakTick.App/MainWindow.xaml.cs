@@ -28,6 +28,7 @@ public partial class MainWindow : Window
         SoundEnabledCheck.IsChecked = _coordinator.Settings.SoundEnabled;
         FullScreenAllDisplaysCheck.IsChecked = _coordinator.Settings.FullScreenAllDisplays;
         LongBreakEnabledCheck.IsChecked = _coordinator.Settings.LongBreakEnabled;
+        AutoPauseOnGoalCheck.IsChecked = _coordinator.Settings.AutoPauseOnGoal;
         Refresh();
     }
 
@@ -49,7 +50,7 @@ public partial class MainWindow : Window
             || !Enum.TryParse<BreakPosition>(PositionBox.SelectedValue?.ToString(), out var breakPosition)
             || !TimeOnly.TryParse(WorkStartBox.Text, out _)
             || !TimeOnly.TryParse(WorkEndBox.Text, out _)
-            || !_coordinator.UpdateSettings(workMinutes, breakSeconds, dailyGoal, breakPosition, ResetOnUnlockCheck.IsChecked == true, WorkHoursEnabledCheck.IsChecked == true, WorkStartBox.Text, WorkEndBox.Text, LaunchAtLoginCheck.IsChecked == true, SoundEnabledCheck.IsChecked == true, FullScreenAllDisplaysCheck.IsChecked == true, LongBreakEnabledCheck.IsChecked == true))
+            || !_coordinator.UpdateSettings(workMinutes, breakSeconds, dailyGoal, breakPosition, ResetOnUnlockCheck.IsChecked == true, WorkHoursEnabledCheck.IsChecked == true, WorkStartBox.Text, WorkEndBox.Text, LaunchAtLoginCheck.IsChecked == true, SoundEnabledCheck.IsChecked == true, FullScreenAllDisplaysCheck.IsChecked == true, LongBreakEnabledCheck.IsChecked == true, AutoPauseOnGoalCheck.IsChecked == true))
         {
             SettingsMessage.Text = "工作 1–120 分钟；休息 20–900 秒；目标 1–20 次。";
             return;
