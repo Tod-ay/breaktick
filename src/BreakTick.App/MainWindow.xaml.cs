@@ -68,6 +68,8 @@ public partial class MainWindow : Window
         var stats = _coordinator.Statistics;
         StatsText.Text = $"连续打卡 {stats.CurrentStreak} 天 · 累计 {stats.TotalCompletions} 次";
         WeekText.Text = $"近 7 天：{string.Join(" · ", stats.RecentDays)}";
+        var badge = BadgeCatalog.Next(stats);
+        BadgeText.Text = $"下一枚徽章：{badge.Label}（{badge.Current}/{badge.Target}）";
     }
 
     protected override void OnClosing(CancelEventArgs e)
