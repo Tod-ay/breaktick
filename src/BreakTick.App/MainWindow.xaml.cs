@@ -58,7 +58,7 @@ public partial class MainWindow : Window
 
     private void Export_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new SaveFileDialog
+        var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "JSON 文件|*.json",
             FileName = $"BreakTick-{DateTime.Today:yyyy-MM-dd}.json"
