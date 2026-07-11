@@ -18,6 +18,7 @@ public partial class MainWindow : Window
         BreakSecondsBox.Text = _coordinator.Settings.BreakSeconds.ToString();
         DailyGoalBox.Text = _coordinator.Settings.DailyGoal.ToString();
         PositionBox.SelectedValue = _coordinator.Settings.BreakPosition.ToString();
+        ResetOnUnlockCheck.IsChecked = _coordinator.Settings.ResetOnSessionUnlock;
         Refresh();
     }
 
@@ -37,7 +38,7 @@ public partial class MainWindow : Window
             || !int.TryParse(BreakSecondsBox.Text, out var breakSeconds)
             || !int.TryParse(DailyGoalBox.Text, out var dailyGoal)
             || !Enum.TryParse<BreakPosition>(PositionBox.SelectedValue?.ToString(), out var breakPosition)
-            || !_coordinator.UpdateSettings(workMinutes, breakSeconds, dailyGoal, breakPosition))
+            || !_coordinator.UpdateSettings(workMinutes, breakSeconds, dailyGoal, breakPosition, ResetOnUnlockCheck.IsChecked == true))
         {
             SettingsMessage.Text = "工作 1–120 分钟；休息 20–900 秒；目标 1–20 次。";
             return;

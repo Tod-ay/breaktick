@@ -6,6 +6,7 @@ public sealed class AppSettings
     public int BreakSeconds { get; set; } = 120;
     public int DailyGoal { get; set; } = 8;
     public BreakPosition BreakPosition { get; set; } = BreakPosition.TopRight;
+    public bool ResetOnSessionUnlock { get; set; } = true;
     public int CompletedToday { get; set; }
     public DateOnly CompletionDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 }

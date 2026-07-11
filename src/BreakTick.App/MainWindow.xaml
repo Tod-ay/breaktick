@@ -51,6 +51,8 @@
                 <ComboBoxItem Tag="Center">屏幕中央</ComboBoxItem>
                 <ComboBoxItem Tag="FullScreen">全屏休息提示</ComboBoxItem>
             </ComboBox>
+            <CheckBox x:Name="ResetOnUnlockCheck" Content="解锁后重新开始工作计时" Margin="0,12,0,0" />
+            <TextBlock Text="快捷键 Ctrl + Alt + B：暂停或继续" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,8,0,0" />
         </StackPanel>
         <StackPanel Grid.Row="4" HorizontalAlignment="Center">
             <TextBlock x:Name="SettingsMessage" Foreground="#B76B23" TextAlignment="Center" Margin="0,0,0,8" />
