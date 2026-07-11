@@ -60,6 +60,9 @@ public partial class MainWindow : Window
         TimeText.Text = TrayService.Format(_coordinator.Remaining);
         PauseButton.Content = _coordinator.IsPaused ? "继续" : "暂停";
         ProgressText.Text = $"今日完成 {_coordinator.Settings.CompletedToday} / {_coordinator.Settings.DailyGoal} 次休息";
+        var stats = _coordinator.Statistics;
+        StatsText.Text = $"连续打卡 {stats.CurrentStreak} 天 · 累计 {stats.TotalCompletions} 次";
+        WeekText.Text = $"近 7 天：{string.Join(" · ", stats.RecentDays)}";
     }
 
     protected override void OnClosing(CancelEventArgs e)

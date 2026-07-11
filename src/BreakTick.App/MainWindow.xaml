@@ -23,6 +23,8 @@
                 </StackPanel>
             </Border>
             <TextBlock x:Name="ProgressText" TextAlignment="Center" Margin="0,20,0,0" Foreground="{StaticResource MutedBrush}" />
+            <TextBlock x:Name="StatsText" TextAlignment="Center" Margin="0,8,0,0" Foreground="{StaticResource MutedBrush}" FontSize="12" />
+            <TextBlock x:Name="WeekText" TextAlignment="Center" Margin="0,4,0,0" Foreground="{StaticResource MutedBrush}" FontSize="12" />
         </StackPanel>
         <Grid Grid.Row="2" Margin="0,16">
             <Grid.ColumnDefinitions>

@@ -82,6 +82,42 @@ public sealed class AppDatabase
         return Convert.ToInt32(command.ExecuteScalar());
     }
 
+    public DashboardStats GetDashboardStats()
+    {
+        using var connection = OpenConnection();
+        using var totalCommand = connection.CreateCommand();
+        totalCommand.CommandText = "SELECT COUNT(*) FROM completions;";
+        var total = Convert.ToInt32(totalCommand.ExecuteScalar());
+
+        using var datesCommand = connection.CreateCommand();
+        datesCommand.CommandText = "SELECT DISTINCT date FROM completions ORDER BY date DESC;";
+        var dates = new HashSet<DateOnly>();
+        using (var reader = datesCommand.ExecuteReader())
+        {
+            while (reader.Read() && DateOnly.TryParse(reader.GetString(0), out var date))
+            {
+                dates.Add(date);
+            }
+        }
+
+        var streak = 0;
+        for (var date = DateOnly.FromDateTime(DateTime.Today); dates.Contains(date); date = date.AddDays(-1))
+        {
+            streak++;
+        }
+
+        var recentDays = new List<int>();
+        for (var offset = 6; offset >= 0; offset--)
+        {
+            using var dayCommand = connection.CreateCommand();
+            dayCommand.CommandText = "SELECT COUNT(*) FROM completions WHERE date = $date;";
+            dayCommand.Parameters.AddWithValue("$date", DateOnly.FromDateTime(DateTime.Today.AddDays(-offset)).ToString("yyyy-MM-dd"));
+            recentDays.Add(Convert.ToInt32(dayCommand.ExecuteScalar()));
+        }
+
+        return new DashboardStats(total, streak, recentDays);
+    }
+
     public void SaveTimerSnapshot(TimerSnapshot snapshot)
     {
         using var connection = OpenConnection();

@@ -15,6 +15,7 @@ public sealed class BreakCoordinator : IDisposable
     private DateTimeOffset _skipGraceUntil;
     private TimerPhase _pausedPhase;
     private long? _sessionId;
+    private DashboardStats _statistics;
 
     public BreakCoordinator(SettingsStore settingsStore, AppDatabase database, IIdleDetector? idleDetector = null)
     {
@@ -23,6 +24,7 @@ public sealed class BreakCoordinator : IDisposable
         _idleDetector = idleDetector ?? new Win32IdleDetector();
         Settings = settingsStore.Load();
         RefreshTodayCount();
+        _statistics = _database.GetDashboardStats();
         _timer = new DispatcherTimer(DispatcherPriority.Normal)
         {
             Interval = TimeSpan.FromSeconds(1)
@@ -42,6 +44,7 @@ public sealed class BreakCoordinator : IDisposable
     public bool IsPaused => Phase == TimerPhase.Paused;
     public bool IsBreakPausedForActivity { get; private set; }
     public int SkipClickCount { get; private set; }
+    public DashboardStats Statistics => _statistics;
 
     public event EventHandler? StateChanged;
     public event EventHandler? WorkStarted;
@@ -113,6 +116,7 @@ public sealed class BreakCoordinator : IDisposable
         {
             Settings.CompletedToday = _database.CompleteBreak(sessionId);
             _sessionId = null;
+            _statistics = _database.GetDashboardStats();
         }
 
         _settingsStore.Save(Settings);
