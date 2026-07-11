@@ -45,6 +45,7 @@ public sealed class BreakCoordinator : IDisposable
     public bool IsPaused => Phase == TimerPhase.Paused;
     public bool IsBreakPausedForActivity { get; private set; }
     public int SkipClickCount { get; private set; }
+    public bool IsLongBreak { get; private set; }
     public DashboardStats Statistics => _statistics;
 
     public event EventHandler? StateChanged;
@@ -130,7 +131,7 @@ public sealed class BreakCoordinator : IDisposable
         StartWork();
     }
 
-    public bool UpdateSettings(int workMinutes, int breakSeconds, int dailyGoal, BreakPosition breakPosition, bool resetOnSessionUnlock, bool workHoursEnabled, string workStart, string workEnd, bool launchAtLogin, bool soundEnabled, bool fullScreenAllDisplays)
+    public bool UpdateSettings(int workMinutes, int breakSeconds, int dailyGoal, BreakPosition breakPosition, bool resetOnSessionUnlock, bool workHoursEnabled, string workStart, string workEnd, bool launchAtLogin, bool soundEnabled, bool fullScreenAllDisplays, bool longBreakEnabled)
     {
         if (workMinutes is < 1 or > 120 || breakSeconds is < 20 or > 900 || dailyGoal is < 1 or > 20)
         {
@@ -148,6 +149,7 @@ public sealed class BreakCoordinator : IDisposable
         Settings.LaunchAtLogin = launchAtLogin;
         Settings.SoundEnabled = soundEnabled;
         Settings.FullScreenAllDisplays = fullScreenAllDisplays;
+        Settings.LongBreakEnabled = longBreakEnabled;
         _settingsStore.Save(Settings);
         SettingsChanged?.Invoke(this, EventArgs.Empty);
 
@@ -255,7 +257,10 @@ public sealed class BreakCoordinator : IDisposable
     {
         Phase = TimerPhase.Breaking;
         _breakStartedAt = DateTimeOffset.Now;
-        _breakRemaining = TimeSpan.FromSeconds(Settings.BreakSeconds);
+        IsLongBreak = Settings.LongBreakEnabled
+            && Settings.LongBreakInterval is >= 2 and <= 8
+            && (Settings.CompletedToday + 1) % Settings.LongBreakInterval == 0;
+        _breakRemaining = TimeSpan.FromSeconds(IsLongBreak ? Settings.LongBreakSeconds : Settings.BreakSeconds);
         if (_sessionId is long sessionId)
         {
             _database.MarkBreakStarted(sessionId);
