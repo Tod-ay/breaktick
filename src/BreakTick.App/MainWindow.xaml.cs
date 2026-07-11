@@ -1,5 +1,7 @@
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
+using Microsoft.Win32;
 
 namespace BreakTick.App;
 
@@ -52,6 +54,22 @@ public partial class MainWindow : Window
 
         SettingsMessage.Text = "设置已保存，并已重新开始本轮工作计时。";
         Refresh();
+    }
+
+    private void Export_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Filter = "JSON 文件|*.json",
+            FileName = $"BreakTick-{DateTime.Today:yyyy-MM-dd}.json"
+        };
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        File.WriteAllText(dialog.FileName, _coordinator.ExportData());
+        SettingsMessage.Text = "数据已导出。";
     }
 
     private void Refresh()

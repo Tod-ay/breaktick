@@ -169,6 +169,8 @@ public sealed class BreakCoordinator : IDisposable
         }
     }
 
+    public string ExportData() => _database.ExportJson();
+
     private bool TryRestoreTimer()
     {
         var snapshot = _database.LoadTimerSnapshot();

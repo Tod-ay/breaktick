@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json;
 using Microsoft.Data.Sqlite;
 
 namespace BreakTick.App;
@@ -116,6 +117,33 @@ public sealed class AppDatabase
         }
 
         return new DashboardStats(total, streak, recentDays);
+    }
+
+    public string ExportJson()
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT id, date, started_at, break_started_at, break_ended_at, ended_at, work_minutes, break_seconds, completed, skipped FROM sessions ORDER BY id;";
+        using var reader = command.ExecuteReader();
+        var sessions = new List<Dictionary<string, object?>>();
+        while (reader.Read())
+        {
+            sessions.Add(new Dictionary<string, object?>
+            {
+                ["id"] = reader.GetInt64(0),
+                ["date"] = reader.GetString(1),
+                ["startedAt"] = reader.GetString(2),
+                ["breakStartedAt"] = reader.IsDBNull(3) ? null : reader.GetString(3),
+                ["breakEndedAt"] = reader.IsDBNull(4) ? null : reader.GetString(4),
+                ["endedAt"] = reader.IsDBNull(5) ? null : reader.GetString(5),
+                ["workMinutes"] = reader.GetInt32(6),
+                ["breakSeconds"] = reader.GetInt32(7),
+                ["completed"] = reader.GetInt32(8) == 1,
+                ["skipped"] = reader.GetInt32(9) == 1
+            });
+        }
+
+        return JsonSerializer.Serialize(new { version = 1, exportedAt = DateTimeOffset.UtcNow, sessions }, new JsonSerializerOptions { WriteIndented = true });
     }
 
     public void SaveTimerSnapshot(TimerSnapshot snapshot)
