@@ -12,6 +12,7 @@ public sealed class AppSettings
     public string WorkEnd { get; set; } = "18:00";
     public bool LaunchAtLogin { get; set; }
     public bool SoundEnabled { get; set; } = true;
+    public bool FullScreenAllDisplays { get; set; }
     public int CompletedToday { get; set; }
     public DateOnly CompletionDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 }

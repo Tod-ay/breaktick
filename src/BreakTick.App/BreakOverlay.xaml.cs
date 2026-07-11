@@ -69,10 +69,10 @@ public partial class BreakOverlay : Window
 
         if (isFullScreen)
         {
-            Left = 0;
-            Top = 0;
-            Width = SystemParameters.PrimaryScreenWidth;
-            Height = SystemParameters.PrimaryScreenHeight;
+            Left = _coordinator.Settings.FullScreenAllDisplays ? SystemParameters.VirtualScreenLeft : 0;
+            Top = _coordinator.Settings.FullScreenAllDisplays ? SystemParameters.VirtualScreenTop : 0;
+            Width = _coordinator.Settings.FullScreenAllDisplays ? SystemParameters.VirtualScreenWidth : SystemParameters.PrimaryScreenWidth;
+            Height = _coordinator.Settings.FullScreenAllDisplays ? SystemParameters.VirtualScreenHeight : SystemParameters.PrimaryScreenHeight;
             return;
         }
 
